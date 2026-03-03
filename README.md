@@ -1,46 +1,39 @@
-# All Watched Over By Machines Of Loving Grace
-![Screenshot 1](all.png)
+# Barely There
 
-An interactive web environment featuring Richard Brautigan's poem "All Watched Over by Machines of Loving Grace" with AI-generated visuals. Part of the ["Duets in Latent Space"](https://marlonbarrios.github.io/duets-in-latent-space/) series.
+![Screenshot 1](all1.png)
+
+**Barely There** is a representation of a song sung with ASMR. The lyrics explore the latent space as an intimate space—soft, close, and barely present.
 
 ## Live App
-[View Live Project](https://marlonbarrios.github.io/alwatchedoverbymachinesoflovinggrace/)
 
-## Video Documentation
-[Watch on YouTube](https://www.youtube.com/watch?v=W_RUBs1IsCw)
+**[View Live →](https://marlonbarrios.github.io/barely_there/)**
 
 ![Screenshot 2](all2.png)
 
 ## Description
-This piece combines AI-generated video with Richard Brautigan's voice reading his iconic 1967 poem. The installation features synchronized scrolling text and an interactive element linking to an analysis of the poem's significance in the context of AI development.
 
-## About Duets in Latent Space
-This work is part of ["Duets in Latent Space"](https://marlonbarrios.github.io/duets-in-latent-space/), a series of live collaborations between the artist and machine learning models. The series explores the enigmatic latent space through various forms of input - movements, sounds, and digital interactions - generating visual, auditory, and textual outputs in real-time.
-
-## Credits
-- Concept & Development: Marlon Barrios Solano
-- Original Poem: Richard Brautigan (1967)
-- Video: Generated using AI models
-- Part of: Duets in Latent Space series
-- Technical Implementation: p5.js
+Video and lyrics move in sync. The piece plays once; press **Spacebar** to start or pause. Minimal and intimate—no links, no extras.
 
 ## Technical Details
-- Built with p5.js
-- Features synchronized video playback and text scrolling
-- Responsive design that scales to window size
-- Interactive clickable area linking to further reading
 
-## Usage
-- Spacebar: Play/Pause video
-- Click center of video: Opens article about the poem
-- Window can be resized while maintaining aspect ratio
+- Built with p5.js
+- Video scaled to window height, centered, aspect ratio kept
+- Scrolling lyrics synced to video time
+- Play once (no loop); Spacebar to play/pause
 
 ## Local Development
+
 1. Clone this repository
-2. Serve the files using a local web server
-3. Open index.html in a web browser
+2. Serve the folder with a local web server (e.g. `python -m http.server` or Live Server)
+3. Open the app in a browser
+
+## Credits
+
+- Concept & Development: Marlon Barrios Solano
+- Technical implementation: p5.js
 
 ## License
+
 MIT License
 
 Copyright (c) 2024 Marlon Barrios Solano
@@ -61,4 +54,4 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE. 
+SOFTWARE.
