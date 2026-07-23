@@ -101,5 +101,9 @@ function keyPressed() {
             video.play();
             playing = true;
         }
+    } else if (key.toLowerCase() === 'l') {
+        video.loop();
+        video.play();
+        playing = true;
     }
 }
