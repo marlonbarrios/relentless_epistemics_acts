@@ -1,8 +1,8 @@
-# Barely There
+# Barely There / I Am Home in Latent Space
 
 ![Screenshot 1](all1.png)
 
-**Barely There** is an interactive visual piece for a song sung with ASMR. The lyrics explore the latent space as an intimate space—soft, close, and barely present. Video, scrolling lyrics, and generative visuals respond to playback and sound.
+**Barely There / I Am Home in Latent Space** is an interactive visual piece—a song sung with ASMR. The lyrics move through latent space as an intimate field: soft, close, barely present, and finally *I am home in latent space*. Video, scrolling lyrics, and generative visuals respond to playback and sound.
 
 ## Live App
 
@@ -26,19 +26,21 @@ You can perform the piece manually—toggling effects and zoom—or press **A** 
 
 ## Controls
 
-| Key | Action |
-|-----|--------|
-| **Space** | Play / pause |
-| **A** | Toggle **automate** — random visual scenes driven by sound (overrides G, V, S, Z, F while active) |
-| **G** | Toggle **generative** video effects (RGB split, bloom, invert, drift, etc.) |
-| **S** | Toggle **solarize** — strong white solarization overlay |
-| **V** | Toggle **vectors** — sound-reactive lines, spirals, and geometry |
-| **Z** | Zoom in (hold for slow drift) |
-| **F** | Zoom out (hold for slow drift) |
-| **L** | Toggle loop |
-| **R** | Start / stop canvas recording |
-| **D** | Download recording as MP4 (WebM converted in-browser when needed) |
-| **H** | Hide / show on-screen hints |
+
+| Key       | Action                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| **Space** | Play / pause                                                                                      |
+| **A**     | Toggle **automate** — random visual scenes driven by sound (overrides G, V, S, Z, F while active) |
+| **G**     | Toggle **generative** video effects (RGB split, bloom, invert, drift, etc.)                       |
+| **S**     | Toggle **solarize** — strong white solarization overlay                                           |
+| **V**     | Toggle **vectors** — sound-reactive lines, spirals, and geometry                                  |
+| **Z**     | Zoom in (hold for slow drift)                                                                     |
+| **F**     | Zoom out (hold for slow drift)                                                                    |
+| **L**     | Toggle loop                                                                                       |
+| **R**     | Start / stop canvas recording                                                                     |
+| **D**     | Download recording as MP4 (WebM converted in-browser when needed)                                 |
+| **H**     | Hide / show on-screen hints                                                                       |
+
 
 ## Manual Mode
 
@@ -82,18 +84,14 @@ Press **A** again to exit automate. Your previous manual settings (which effects
 ## Local Development
 
 1. Clone this repository:
-
-   ```bash
+  ```bash
    git clone https://github.com/marlonbarrios/barely_there.git
    cd barely_there
-   ```
-
+  ```
 2. Serve the folder with a local web server (required for video and audio analysis — do not open as `file://`):
-
-   ```bash
+  ```bash
    python -m http.server 8000
-   ```
-
+  ```
 3. Open `http://localhost:8000` in a browser
 
 ## Credits
