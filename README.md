@@ -8,6 +8,14 @@
 
 **[View Live →](https://marlonbarrios.github.io/barely_there/)**
 
+## Repository
+
+**[github.com/marlonbarrios/barely_there](https://github.com/marlonbarrios/barely_there)**
+
+```bash
+git clone https://github.com/marlonbarrios/barely_there.git
+```
+
 ![Screenshot 2](all2.png)
 
 ## Description
@@ -73,7 +81,13 @@ Press **A** again to exit automate. Your previous manual settings (which effects
 
 ## Local Development
 
-1. Clone this repository
+1. Clone this repository:
+
+   ```bash
+   git clone https://github.com/marlonbarrios/barely_there.git
+   cd barely_there
+   ```
+
 2. Serve the folder with a local web server (required for video and audio analysis — do not open as `file://`):
 
    ```bash
