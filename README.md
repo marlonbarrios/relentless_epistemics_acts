@@ -1,6 +1,6 @@
 # Relentless Epistemic Acts
 
-![Relentless Epistemic Acts](screenshot.png)
+![Screenshot 1](all1.png)
 
 **Relentless Epistemic Acts** is an interactive visual piece—video and sound-reactive generative layers. Black-and-white techno vectors swarm across the frame; a crosshair replaces the system cursor.
 
@@ -15,6 +15,8 @@
 ```bash
 git clone https://github.com/marlonbarrios/relentless_epistemics_acts.git
 ```
+
+![Screenshot 2](all2.png)
 
 ## Description
 
