@@ -1,12 +1,16 @@
 # Relentless Epistemic Acts
 
+**Live app:** [https://marlonbarrios.github.io/relentless_epistemics_acts/](https://marlonbarrios.github.io/relentless_epistemics_acts/)
+
 ![Screenshot 1](all1.png)
 
 **Relentless Epistemic Acts** is an interactive visual piece—video and sound-reactive generative layers. Black-and-white techno vectors swarm across the frame; a crosshair replaces the system cursor.
 
 ## Live App
 
-**[View Live →](https://marlonbarrios.github.io/relentless_epistemics_acts/)**
+Open the piece here:
+
+**[https://marlonbarrios.github.io/relentless_epistemics_acts/](https://marlonbarrios.github.io/relentless_epistemics_acts/)**
 
 ## Repository
 
