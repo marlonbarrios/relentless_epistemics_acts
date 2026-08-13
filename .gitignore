@@ -1,0 +1,5 @@
+# local originals / oversized media (keep web all.mp4 in repo)
+all-original-backup.mov
+*.mov
+.DS_Store
+node_modules/

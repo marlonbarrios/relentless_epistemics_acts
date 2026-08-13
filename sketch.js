@@ -51,7 +51,7 @@ let converting = false;
 let videoPausedInit = false;
 
 function preload() {
-    video = createVideo('all.mov', videoLoaded);
+    video = createVideo('all.mp4', videoLoaded);
 }
 
 function initPausedVideo() {
