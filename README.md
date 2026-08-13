@@ -1,8 +1,8 @@
-# relentless epistemic acts
+# Relentless Epistemic Acts
 
-![Screenshot 1](all1.png)
+![Relentless Epistemic Acts](screenshot.png)
 
-**relentless epistemic acts** is an interactive visual piece—video and sound-reactive generative layers. Black-and-white techno vectors swarm across the frame; a crosshair replaces the system cursor.
+**Relentless Epistemic Acts** is an interactive visual piece—video and sound-reactive generative layers. Black-and-white techno vectors swarm across the frame; a crosshair replaces the system cursor.
 
 ## Live App
 
@@ -16,10 +16,7 @@
 git clone https://github.com/marlonbarrios/relentless_epistemics_acts.git
 ```
 
-![Screenshot 2](all2.png)
-
 ## Description
-
 
 The video loads **paused** on the first frame. Press **Space** to play or pause. On-screen hints appear top-left; press **H** to hide them. There is no lyrics ticker.
 
@@ -73,7 +70,7 @@ The system cursor is hidden. A white techno **crosshair** follows the mouse, wit
 
 1. Press **R** to start recording the canvas (and video audio when available).
 2. Press **R** again to stop.
-3. Press **D** to download as `relentless-epistemic-acts-…`. Chrome may save WebM first and convert to MP4 via ffmpeg.wasm.
+3. Press **D** to download as `Relentless-Epistemic-Acts-…`. Chrome may save WebM first and convert to MP4 via ffmpeg.wasm.
 
 ## Technical Details
 

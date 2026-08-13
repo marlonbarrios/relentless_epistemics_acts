@@ -1157,7 +1157,7 @@ async function downloadRecording() {
     let link = document.createElement('a');
     let url = URL.createObjectURL(blob);
     link.href = url;
-    link.download = 'relentless-epistemic-acts-' + Date.now() + '.' + extension;
+    link.download = 'Relentless-Epistemic-Acts-' + Date.now() + '.' + extension;
     link.click();
     URL.revokeObjectURL(url);
 }
