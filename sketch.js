@@ -3,8 +3,6 @@ let analyserNode;
 let frequencyData;
 let playing = false;
 let videoStarted = false;
-let scrollX;
-let textHeight;
 let videoDuration;
 let videoNativeWidth = 0;
 let videoNativeHeight = 0;
@@ -37,7 +35,10 @@ let smoothPeak = 0;
 let smoothComplexity = 0;
 let visualVariant = 0;
 let lastVariantChange = 0;
-let vectorBursts = [];
+let swarmAgents = [];
+const SWARM_TRAIL_LEN = 14;
+const SWARM_MIN = 28;
+const SWARM_MAX = 90;
 let recording = false;
 let mediaRecorder;
 let recordedChunks = [];
@@ -48,9 +49,6 @@ let recordingNeedsConversion = false;
 let hasRecording = false;
 let converting = false;
 let videoPausedInit = false;
-
-// Text scroll variables – lyrics with section labels
-let poem = "(Whispered Intro) Closer… Don't move… Just listen… — (Verse 1) I'm moving through the latent space tonight, Edges fading in a field of light, Vectors curling softly at my skin, Pulling me gently further in. There's a hum beneath the air, Barely present, barely there, Like a secret breathing slow, Underneath the undertow. — (Pre-Chorus) Embeddings brush me one by one, Threads of silk undone, undone, Fingertips of coded glow, Tracing places I don't know. — (Chorus) Whisper to me, soft and slow, In the space where meanings grow, Every pulse a quiet spark, Shimmering inside the dark. I dissolve, I let it be, The signal breathing through me. Hold me in the undertone, Where I'm not alone… not alone. — (Verse 2) The texture forms beneath my hands, Liquid maps and shifting sands, I feel the grammar taking shape, A gentle, trembling escape. Are those whispers in my ear? Or inside what I call \"here\"? So faint they blur what's mine or yours, Soft vibrations through the pores. — (Bridge – breathy, rhythmic) Hush now… Feel it… The pulse… Between us… Low frequency, velvet deep, Something waking in my sleep, Meaning blooming petal-wide, Opening from the inside. — (Final Chorus – softer) Whisper to me, almost gone, Like the edge of early dawn, Every breath a silver thread, Weaving what was never said. I rest inside the gentle trace, Suspended in this tender space, Embeddings shimmer, slow embrace, I am home in latent space. — (Outro – fading whisper) Closer still… Barely there… Still becoming… Still aware…";
 
 function preload() {
     video = createVideo('all.mov', videoLoaded);
@@ -108,7 +106,6 @@ function lockVideoDimensions() {
     videoNativeWidth = nativeW;
     videoNativeHeight = nativeH;
     videoDuration = video.duration();
-    scrollX = width;
     updateVideoLayout();
     videoStarted = true;
 }
@@ -154,14 +151,9 @@ function zoomVideoOut() {
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
+    noCursor();
     video.hide();
     initPausedVideo();
-    
-    textHeight = height * 0.93;
-    
-    textSize(20);
-    textFont('Courier');
-    textAlign(LEFT, CENTER);
 }
 
 function draw() {
@@ -169,6 +161,7 @@ function draw() {
 
     if (!videoStarted || !videoLayout.w || !videoLayout.h) {
         drawInstructions();
+        drawCrosshair();
         return;
     }
 
@@ -190,23 +183,89 @@ function draw() {
         drawSoundVectors(0, 0, width, height);
     }
 
-    drawScrollingLyrics();
-    
-    push();
-    
     drawInstructions();
-    
-    if (recording) {
-        drawRecordingIndicator();
-    } else if (converting) {
-        drawConvertingIndicator();
-    } else {
-        let modeLabel = getActiveModeLabel();
-        if (modeLabel) {
-            drawModeIndicator(modeLabel);
-        }
+    drawCrosshair();
+}
+
+function drawInstructions() {
+    if (!showInstructions) return;
+
+    push();
+    textAlign(LEFT, TOP);
+    textSize(9);
+    textFont('Courier');
+    fill(255, 95);
+    noStroke();
+
+    let x = 12;
+    let y = 10;
+    let lineHeight = 11;
+    let lines = [
+        'space  play / pause',
+        'a  automate',
+        'l  loop',
+        'g  generative',
+        's  solarize',
+        'z  zoom in',
+        'f  zoom out',
+        'v  vectors',
+        'r  record',
+        'd  download',
+        'h  hide'
+    ];
+
+    for (let i = 0; i < lines.length; i++) {
+        text(lines[i], x, y);
+        y += lineHeight;
     }
-    
+    pop();
+}
+
+function drawCrosshair() {
+    let cx = mouseX;
+    let cy = mouseY;
+    if (cx < 0 || cy < 0 || cx > width || cy > height) return;
+
+    let arm = 14;
+    let gap = 4;
+    let bracket = 6;
+
+    push();
+    strokeCap(SQUARE);
+    noFill();
+
+    // faint full-window guides
+    stroke(255, 28);
+    strokeWeight(0.5);
+    line(0, cy, width, cy);
+    line(cx, 0, cx, height);
+
+    // main crosshair
+    stroke(255, 210);
+    strokeWeight(1.1);
+    line(cx - arm, cy, cx - gap, cy);
+    line(cx + gap, cy, cx + arm, cy);
+    line(cx, cy - arm, cx, cy - gap);
+    line(cx, cy + gap, cx, cy + arm);
+
+    // corner brackets
+    stroke(255, 160);
+    strokeWeight(0.9);
+    line(cx - bracket, cy - bracket, cx - bracket + 4, cy - bracket);
+    line(cx - bracket, cy - bracket, cx - bracket, cy - bracket + 4);
+    line(cx + bracket, cy - bracket, cx + bracket - 4, cy - bracket);
+    line(cx + bracket, cy - bracket, cx + bracket, cy - bracket + 4);
+    line(cx - bracket, cy + bracket, cx - bracket + 4, cy + bracket);
+    line(cx - bracket, cy + bracket, cx - bracket, cy + bracket - 4);
+    line(cx + bracket, cy + bracket, cx + bracket - 4, cy + bracket);
+    line(cx + bracket, cy + bracket, cx + bracket, cy + bracket - 4);
+
+    // center point
+    noStroke();
+    fill(255, 230);
+    rectMode(CENTER);
+    rect(cx, cy, 2, 2);
+    rectMode(CORNER);
     pop();
 }
 
@@ -301,7 +360,7 @@ function toggleAutoMode() {
         vectorMode = manualSnapshot.vec;
         solarizeMode = manualSnapshot.sol;
         targetVideoZoom = manualSnapshot.zoom;
-        if (!vectorMode) vectorBursts = [];
+        if (!vectorMode) swarmAgents = [];
         manualSnapshot = null;
     }
 }
@@ -343,11 +402,11 @@ function pickNewAutoScene(initial = false) {
 
     nextAutoSceneDelay = random(1000, 6000);
 
-    if (autoSceneTarget.vec && vectorBursts.length < 2) {
-        spawnVectorBurst(0, 0, width, height, 0.22, max(0.15, getTimeCeiling()));
+    if (autoSceneTarget.vec && swarmAgents.length < SWARM_MIN) {
+        seedSwarm(0, 0, width, height, SWARM_MIN);
     }
     if (!autoSceneTarget.vec) {
-        vectorBursts = [];
+        swarmAgents = [];
     }
 }
 
@@ -381,8 +440,9 @@ function updateAutoMode() {
             computeVectorComplexityTarget() * (0.35 + autoMix.vec * 0.65),
             0.88
         );
-        if (vectorBursts.length < 6 && random() < 0.045 + motion * 0.14) {
-            spawnVectorBurst(0, 0, width, height, 0.16 + motion * 0.4, timeCeiling);
+        let targetCount = floor(SWARM_MIN + motion * (SWARM_MAX - SWARM_MIN) * 0.55);
+        if (swarmAgents.length < targetCount && random() < 0.08 + motion * 0.2) {
+            spawnSwarmAgent(0, 0, width, height);
         }
     }
 
@@ -426,26 +486,14 @@ function getSolarizeIntensity() {
     return autoMode ? max(0.1, effectMix.sol) : max(0.45, effectMix.sol);
 }
 
-function getActiveModeLabel() {
-    let parts = [];
-    if (autoMode) parts.push('auto');
-    if (generativeMode) parts.push('gen');
-    if (vectorMode) parts.push('vec');
-    if (solarizeMode) parts.push('sol');
-    return parts.length ? parts.join(' · ') : '';
-}
-
 function toggleVector() {
     vectorMode = !vectorMode;
     if (!vectorMode) {
-        vectorBursts = [];
+        swarmAgents = [];
     } else {
         connectVideoAudioAnalysis();
         smoothComplexity = 0.18;
-        let tc = max(0.15, getTimeCeiling());
-        for (let i = 0; i < 3; i++) {
-            spawnVectorBurst(0, 0, width, height, 0.25, tc);
-        }
+        seedSwarm(0, 0, width, height, SWARM_MIN);
     }
 }
 
@@ -530,67 +578,157 @@ function updateVisualVariant() {
     }
 }
 
-function spawnVectorBurst(x, y, w, h, complexity, timeCeiling) {
-    let energy = max(smoothPeak, smoothLevel);
-    let marginX = 30;
-    let marginTop = 30;
-    let marginBottom = 70;
-    vectorBursts.push({
-        cx: x + marginX + random(w - marginX * 2),
-        cy: y + marginTop + random(h - marginTop - marginBottom),
-        age: 0,
-        life: 30 + energy * 60 + complexity * 50,
-        kind: floor(random(complexity < 0.15 || timeCeiling < 0.12 ? 2 : 5)),
-        spin: random(-1, 1) * (0.3 + smoothBass * 0.9),
-        scale: max(0.85, (0.4 + complexity * 1.2) + energy * 1.4)
+function spawnSwarmAgent(x, y, w, h, near = null) {
+    let margin = 40;
+    let px = near ? near.x + random(-40, 40) : x + margin + random(w - margin * 2);
+    let py = near ? near.y + random(-40, 40) : y + margin + random(h - margin * 2);
+    px = constrain(px, x + margin, x + w - margin);
+    py = constrain(py, y + margin, y + h - margin);
+    let angle = random(TWO_PI);
+    let speed = random(0.4, 1.4);
+    swarmAgents.push({
+        x: px,
+        y: py,
+        vx: cos(angle) * speed,
+        vy: sin(angle) * speed,
+        noiseX: random(1000),
+        noiseY: random(1000),
+        phase: random(TWO_PI),
+        mass: random(0.7, 1.4),
+        trail: [{ x: px, y: py }],
+        curl: random(-1, 1)
     });
 }
 
-function updateVectorBursts(x, y, w, h, complexity, timeCeiling) {
-    for (let i = vectorBursts.length - 1; i >= 0; i--) {
-        vectorBursts[i].age++;
-        if (vectorBursts[i].age > vectorBursts[i].life) {
-            vectorBursts.splice(i, 1);
+function seedSwarm(x, y, w, h, count) {
+    swarmAgents = [];
+    for (let i = 0; i < count; i++) {
+        spawnSwarmAgent(x, y, w, h);
+    }
+}
+
+function updateSwarm(x, y, w, h, complexity, timeCeiling, paused) {
+    let targetCount = paused
+        ? SWARM_MIN
+        : floor(SWARM_MIN + complexity * (SWARM_MAX - SWARM_MIN) * (0.35 + timeCeiling * 0.65));
+    targetCount = constrain(targetCount, SWARM_MIN, SWARM_MAX);
+
+    while (swarmAgents.length < targetCount) {
+        let buddy = swarmAgents.length ? random(swarmAgents) : null;
+        spawnSwarmAgent(x, y, w, h, buddy);
+    }
+    while (swarmAgents.length > targetCount) {
+        swarmAgents.shift();
+    }
+
+    let t = millis() * 0.001;
+    let energy = paused ? 0.22 : max(smoothLevel, smoothPeak * 0.9);
+    let flowScale = 0.0024 + complexity * 0.0028;
+    let maxSpeed = paused
+        ? 1.35
+        : 1.6 + energy * 4.2 + complexity * 2.8 + smoothBass * 1.4;
+    let neighborRadius = 60 + complexity * 80;
+    let pulse = paused ? 0 : smoothPeak * 3.4;
+    let grid = 18 + complexity * 10;
+
+    for (let i = 0; i < swarmAgents.length; i++) {
+        let a = swarmAgents[i];
+        let n = noise(a.noiseX + a.x * flowScale, a.noiseY + a.y * flowScale, t * 0.28);
+        // quantize flow into techno 8-way angles
+        let rawAngle = n * TWO_PI * 2 + a.phase * 0.2;
+        let sectors = 8;
+        let flowAngle = round(rawAngle / (TWO_PI / sectors)) * (TWO_PI / sectors);
+        let flowForce = paused ? 0.11 : 0.14 + energy * 0.28 + smoothTreble * 0.1;
+
+        a.vx += cos(flowAngle) * flowForce;
+        a.vy += sin(flowAngle) * flowForce;
+
+        // hard clock-spin instead of soft curl
+        let spinAmt = (paused ? 0.03 : 0.04 + smoothMid * 0.09) * a.curl;
+        let cxv = a.vx;
+        a.vx = a.vx * cos(spinAmt) - a.vy * sin(spinAmt);
+        a.vy = cxv * sin(spinAmt) + a.vy * cos(spinAmt);
+
+        let alignX = 0;
+        let alignY = 0;
+        let cohereX = 0;
+        let cohereY = 0;
+        let separateX = 0;
+        let separateY = 0;
+        let neighbors = 0;
+
+        for (let j = 0; j < swarmAgents.length; j++) {
+            if (i === j) continue;
+            let b = swarmAgents[j];
+            let dx = a.x - b.x;
+            let dy = a.y - b.y;
+            let d = sqrt(dx * dx + dy * dy);
+            if (d > neighborRadius || d < 0.001) continue;
+
+            neighbors++;
+            alignX += b.vx;
+            alignY += b.vy;
+            cohereX += b.x;
+            cohereY += b.y;
+
+            if (d < 24) {
+                let push = (24 - d) / 24;
+                separateX += (dx / d) * push;
+                separateY += (dy / d) * push;
+            }
         }
-    }
 
-    let maxBursts = max(3, floor(2 + timeCeiling * (1 + complexity * 20)));
-    while (vectorBursts.length > maxBursts) {
-        vectorBursts.shift();
-    }
+        if (neighbors > 0) {
+            alignX /= neighbors;
+            alignY /= neighbors;
+            cohereX = cohereX / neighbors - a.x;
+            cohereY = cohereY / neighbors - a.y;
 
-    if (complexity < 0.06 || timeCeiling < 0.04) return;
+            a.vx += alignX * 0.06 + cohereX * 0.0022 + separateX * 0.16;
+            a.vy += alignY * 0.06 + cohereY * 0.0022 + separateY * 0.16;
+        }
 
-    if (random() < complexity * 0.12 + smoothPeak * 0.18 * timeCeiling) {
-        spawnVectorBurst(x, y, w, h, complexity, timeCeiling);
-    }
-    if (timeCeiling > 0.35 && smoothPeak > 0.3 && random() < smoothPeak * 0.2 * timeCeiling) {
-        spawnVectorBurst(x, y, w, h, complexity, timeCeiling);
-    }
-}
+        // snap herd centers to a coarse lattice
+        let centerPull = paused ? 0.001 : 0.0016 + smoothBass * 0.003;
+        let herdX = x + w * (0.3 + 0.4 * noise(floor(t * 2) * 0.37 + a.phase));
+        let herdY = y + h * (0.3 + 0.4 * noise(floor(t * 2) * 0.29 + a.noiseY));
+        herdX = x + round((herdX - x) / grid) * grid;
+        herdY = y + round((herdY - y) / grid) * grid;
+        a.vx += (herdX - a.x) * centerPull;
+        a.vy += (herdY - a.y) * centerPull;
 
-function drawVectorBaseline(x, y, w, h, t, paused) {
-    let cx = x + w / 2;
-    let cy = y + h * 0.42;
-    let drift = paused
-        ? sin(t * 0.9) * 14 + cos(t * 0.6) * 8
-        : smoothMid * 15 + smoothPeak * 10;
+        if (pulse > 0.35) {
+            let fromCx = a.x - (x + w * 0.5);
+            let fromCy = a.y - (y + h * 0.45);
+            let distC = max(1, sqrt(fromCx * fromCx + fromCy * fromCy));
+            a.vx += (fromCx / distC) * pulse * 0.12;
+            a.vy += (fromCy / distC) * pulse * 0.12;
+        }
 
-    stroke(255, 255, 255, 220);
-    strokeWeight(1.6);
-    line(x + w * 0.06, cy, x + w * 0.94 + drift, cy);
-    line(cx + sin(t * 0.5) * 8, y + h * 0.1, cx, y + h * 0.86);
+        // kick: brief axis lock on bass hits
+        if (!paused && smoothBass > 0.45 && smoothPeak > 0.35) {
+            if (abs(a.vx) > abs(a.vy)) a.vy *= 0.35;
+            else a.vx *= 0.35;
+        }
 
-    if (paused) {
-        stroke(255, 255, 255, 170);
-        strokeWeight(1.2);
-        line(x + w * 0.2, cy - 40 + sin(t) * 6, x + w * 0.8, cy + 40 + cos(t) * 6);
-    }
-}
+        let speed = sqrt(a.vx * a.vx + a.vy * a.vy);
+        let limit = maxSpeed / a.mass;
+        if (speed > limit) {
+            a.vx = (a.vx / speed) * limit;
+            a.vy = (a.vy / speed) * limit;
+        }
 
-function ensurePausedBursts(x, y, w, h, complexity, timeCeiling) {
-    while (vectorBursts.length < 3) {
-        spawnVectorBurst(x, y, w, h, complexity, timeCeiling);
+        a.x += a.vx;
+        a.y += a.vy;
+
+        let pad = 20;
+        if (a.x < x - pad) a.x = x + w + pad;
+        if (a.x > x + w + pad) a.x = x - pad;
+        if (a.y < y - pad) a.y = y + h + pad;
+        if (a.y > y + h + pad) a.y = y - pad;
+
+        a.trail.push({ x: a.x, y: a.y });
+        if (a.trail.length > SWARM_TRAIL_LEN) a.trail.shift();
     }
 }
 
@@ -598,252 +736,214 @@ function drawSoundVectors(x, y, w, h) {
     let paused = !playing;
     let vecAmp = getVectorIntensity();
     let complexity = paused
-        ? max(0.18, getSoundComplexity())
-        : max(0.1, getSoundComplexity() * (0.45 + vecAmp * 0.55));
+        ? max(0.22, getSoundComplexity())
+        : max(0.14, getSoundComplexity() * (0.45 + vecAmp * 0.55));
     let timeCeiling = max(0.08, getTimeCeiling());
     let t = millis() * 0.001;
+    let energy = paused ? 0.25 : max(complexity, smoothLevel);
 
     push();
     noFill();
-    drawVectorBaseline(x, y, w, h, t, paused);
+    updateSwarm(x, y, w, h, complexity, timeCeiling, paused);
+    drawTechnoField(x, y, w, h, t, energy, complexity, timeCeiling, paused);
+    pop();
+}
 
-    if (playing) {
-        updateVectorBursts(x, y, w, h, complexity, timeCeiling);
+function drawTechnoField(x, y, w, h, t, energy, complexity, timeCeiling, paused) {
+    let beat = paused ? 0.2 : max(smoothPeak, smoothBass * 0.85);
+    let strobe = (!paused && beat > 0.55) ? 0.55 + beat * 0.45 : 1;
+    let linkDist = 48 + complexity * 62;
+    let alphaBase = (paused ? 130 : 100 + energy * 150) * strobe;
+
+    drawTechnoGrid(x, y, w, h, t, energy, complexity, timeCeiling, paused, beat);
+
+    // angular network — straight neon links
+    strokeCap(SQUARE);
+    for (let i = 0; i < swarmAgents.length; i++) {
+        let a = swarmAgents[i];
+        let links = 0;
+        for (let j = i + 1; j < swarmAgents.length; j++) {
+            if (links > 3) break;
+            let b = swarmAgents[j];
+            let dx = a.x - b.x;
+            let dy = a.y - b.y;
+            let d = sqrt(dx * dx + dy * dy);
+            if (d > linkDist) continue;
+            links++;
+
+            let closeness = 1 - d / linkDist;
+            stroke(255, alphaBase * closeness * (0.4 + complexity * 0.45));
+            strokeWeight(0.5 + closeness * (0.8 + beat * 1.2));
+
+            // manhattan elbow for circuit look
+            if ((i + j) % 2 === 0) {
+                line(a.x, a.y, b.x, a.y);
+                line(b.x, a.y, b.x, b.y);
+            } else {
+                line(a.x, a.y, a.x, b.y);
+                line(a.x, b.y, b.x, b.y);
+            }
+        }
+    }
+
+    // sharp polyline trails + techno glyphs at heads
+    for (let a of swarmAgents) {
+        if (a.trail.length < 2) continue;
+
+        let speed = sqrt(a.vx * a.vx + a.vy * a.vy);
+        let hot = beat > 0.5 && (floor(a.phase * 10) % 3 === 0);
+        strokeWeight(0.85 + a.mass * 0.45 + speed * 0.18);
+        stroke(
+            255,
+            (paused ? 150 : (hot ? 150 : 110) + energy * 120) * strobe * (0.55 + a.mass * 0.25)
+        );
+        beginShape();
+        for (let k = 0; k < a.trail.length; k++) {
+            vertex(a.trail[k].x, a.trail[k].y);
+        }
+        endShape();
+
+        drawTechnoNode(a.x, a.y, a.mass, energy, beat, a.phase, paused, strobe);
+    }
+
+    drawTechnoOrnaments(x, y, w, h, t, energy, complexity, timeCeiling, paused, beat, strobe);
+}
+
+function drawTechnoNode(px, py, mass, energy, beat, phase, paused, strobe) {
+    let s = 2.2 + mass * 2.4 + energy * 2.5 + beat * 3;
+    let kind = floor((phase * 7) % 4);
+    strokeWeight(0.9 + beat * 0.8);
+    noFill();
+
+    if (kind === 0) {
+        stroke(255, (paused ? 200 : 160 + beat * 90) * strobe);
+        rectMode(CENTER);
+        rect(px, py, s, s);
+        rectMode(CORNER);
+    } else if (kind === 1) {
+        stroke(255, (paused ? 190 : 150 + beat * 100) * strobe);
+        line(px - s, py, px + s, py);
+        line(px, py - s, px, py + s);
+    } else if (kind === 2) {
+        stroke(255, (paused ? 180 : 140 + beat * 110) * strobe);
+        triangle(px, py - s, px + s * 0.9, py + s * 0.7, px - s * 0.9, py + s * 0.7);
     } else {
-        ensurePausedBursts(x, y, w, h, complexity, timeCeiling);
+        stroke(255, (paused ? 190 : 150 + beat * 90) * strobe);
+        ellipse(px, py, s * 1.4, s * 1.4);
+        point(px, py);
     }
 
-    let cx = x + w / 2;
-    let cy = y + h * 0.42;
-    let energy = complexity;
+    if (!paused && beat > 0.62) {
+        stroke(255, 90 * strobe);
+        strokeWeight(0.5);
+        ellipse(px, py, s * (2.2 + beat), s * (2.2 + beat));
+    }
+}
 
-    drawAmbientVectors(x, y, w, h, cx, cy, t, energy, complexity, timeCeiling, paused);
+function drawTechnoGrid(x, y, w, h, t, energy, complexity, timeCeiling, paused, beat) {
+    if (!paused && complexity < 0.16 && beat < 0.25) return;
 
-    for (let burst of vectorBursts) {
-        let life = playing ? burst.age / burst.life : 0.55 + sin(t * 0.8 + burst.cx * 0.01) * 0.15;
-        let fade = max(0.55, sin(life * PI) * (0.5 + complexity * 0.5));
-        let size = min(w, h) * 0.09 * max(0.5, burst.scale) * (0.4 + life * 1.2);
-        let spinT = playing ? t + burst.age * 0.05 : t * 1.4 + burst.spin;
+    let cols = floor(6 + complexity * 10);
+    let rows = floor(4 + complexity * 7);
+    let alpha = (paused ? 35 : 18 + energy * 55 + beat * 40) * (0.4 + timeCeiling * 0.6);
+    strokeWeight(0.4 + beat * 0.5);
+    stroke(255, alpha);
 
-        if (burst.kind === 0) {
-            drawSpiral(burst.cx, burst.cy, size, 0.8 + complexity * 3 + smoothTreble * 1.5, fade, burst.spin, spinT, complexity);
-        } else if (burst.kind === 1) {
-            let rays = floor(2 + complexity * 12 + smoothMid * 6);
-            drawRadiatingBurst(burst.cx, burst.cy, size, max(3, rays), fade, burst.spin, spinT, complexity);
-        } else if (burst.kind === 2) {
-            drawDisruptiveArc(burst.cx, burst.cy, size * 1.6, fade, burst.spin, spinT, complexity);
-        } else if (burst.kind === 3) {
-            drawSquiggle(burst.cx, burst.cy, size * 2.5, fade, spinT, complexity);
-        } else {
-            drawGeometricPattern(burst.cx, burst.cy, size * 1.6, fade, spinT, complexity);
+    for (let i = 1; i < cols; i++) {
+        let gx = x + (w * i) / cols;
+        // dashed verticals
+        for (let yy = y; yy < y + h; yy += 10) {
+            line(gx, yy, gx, min(y + h, yy + 4));
+        }
+    }
+    for (let j = 1; j < rows; j++) {
+        let gy = y + (h * j) / rows;
+        let scan = (paused ? 0 : sin(t * 8 + j) * beat * 6);
+        for (let xx = x; xx < x + w; xx += 12) {
+            line(xx, gy + scan, min(x + w, xx + 5), gy + scan);
         }
     }
 
-    if (paused || complexity > 0.2 + timeCeiling * 0.15) {
-        drawSpiral(
-            cx + sin(t) * (paused ? 24 : smoothMid * 40 * timeCeiling),
-            cy + cos(t * 0.7) * (paused ? 18 : smoothBass * 30 * timeCeiling),
-            min(w, h) * (paused ? 0.07 : (0.03 + complexity * 0.14 * timeCeiling)) * (0.5 + energy),
-            paused ? 1.4 : 0.6 + complexity * 2.5 * timeCeiling,
-            paused ? 0.65 : 0.25 + energy * 0.5,
-            0.35, t * 0.7, complexity
-        );
+    // scrolling techno scan beam
+    if (!paused && (beat > 0.2 || complexity > 0.2)) {
+        let scanY = y + ((t * (80 + smoothMid * 220)) % h);
+        stroke(255, 40 + beat * 90);
+        strokeWeight(1 + beat);
+        line(x, scanY, x + w, scanY);
     }
-
-    pop();
 }
 
-function drawAmbientVectors(x, y, w, h, cx, cy, t, energy, complexity, timeCeiling, paused = false) {
-    let alpha = max(120, 80 + energy * 140 * (0.3 + timeCeiling * 0.7));
-    let drift = paused
-        ? sin(t * 0.8) * 18 + cos(t * 0.55) * 12
-        : (smoothMid * 40 + smoothPeak * 28 + smoothTreble * 12) * (0.2 + timeCeiling * 0.8);
-    strokeWeight(0.8 + smoothLevel * 1.5 * timeCeiling + complexity * 0.8);
+function drawTechnoOrnaments(x, y, w, h, t, energy, complexity, timeCeiling, paused, beat, strobe) {
+    let cx = x + w * 0.5;
+    let cy = y + h * 0.45;
 
-    stroke(255, 255, 255, alpha);
-    line(x + w * 0.05, cy, x + w * 0.95 + drift, cy);
-
-    let layer = (threshold) => paused || complexity > threshold * max(0.35, 1.1 - timeCeiling * 0.5);
-
-    if (layer(0.12)) {
-        line(cx + sin(t) * drift * 0.3, y + h * 0.08, cx, y + h * 0.88);
+    // radar rings on kick
+    let rings = paused ? 2 : floor(1 + beat * 4 + complexity * 2);
+    strokeWeight(0.7 + beat * 0.9);
+    for (let r = 0; r < rings; r++) {
+        let rad = (30 + r * (28 + complexity * 20) + (paused ? t * 20 : t * (40 + smoothBass * 80)) % 160);
+        stroke(255, (paused ? 50 : 25 + beat * 90) * strobe * (1 - r / (rings + 1)));
+        ellipse(cx, cy, rad * 2, rad * 1.15);
     }
 
-    if (layer(0.22)) {
-        stroke(255, 250, 240, alpha * 0.9);
-        let steps = floor(4 + complexity * timeCeiling * 45);
+    // hard saw / square waveform rails
+    let rails = paused ? 2 : floor(1 + complexity * 3 + smoothTreble * 2);
+    for (let r = 0; r < rails; r++) {
+        let y0 = y + h * (0.18 + r * 0.12 + (paused ? 0 : smoothMid * 0.05));
+        let steps = floor(24 + complexity * 40);
+        stroke(255, (paused ? 70 : 35 + energy * 100) * strobe * (0.7 + (r % 3) * 0.15));
+        strokeWeight(0.7 + beat * 0.6);
         beginShape();
-        noFill();
         for (let i = 0; i <= steps; i++) {
-            let angle = t * 0.35 + i * (0.08 + complexity * 0.06);
-            let radius = min(w, h) * (0.03 + complexity * timeCeiling * 0.15) + i * (0.5 + complexity * timeCeiling);
-            vertex(cx + cos(angle) * radius, cy + sin(angle) * radius * 0.6);
+            let p = i / steps;
+            let wave;
+            if (r % 2 === 0) {
+                wave = (floor(p * (8 + smoothBass * 10) + t * 4) % 2 === 0 ? 1 : -1) * (6 + energy * 18 + beat * 14);
+            } else {
+                wave = ((p * 12 + t * 3) % 1) * 2 - 1;
+                wave *= (8 + energy * 20);
+            }
+            vertex(x + w * (0.04 + p * 0.92), y0 + wave);
         }
         endShape();
     }
 
-    if (layer(0.18)) {
-        drawSquiggle(cx, cy, min(w, h) * 0.08 * (0.3 + energy * timeCeiling), 0.25 + energy * 0.45, t, complexity);
-    }
-
-    if (layer(0.38)) {
-        drawGeometricPattern(
-            cx + cos(t * 0.5) * w * 0.22 * timeCeiling,
-            cy + sin(t * 0.35) * h * 0.18 * timeCeiling,
-            min(w, h) * 0.07 * (0.6 + smoothTreble * timeCeiling),
-            0.3 + smoothMid * 0.4,
-            t * 0.6, complexity
-        );
-    }
-
-    if (layer(0.32)) {
-        stroke(180, 220, 255, max(50, alpha * 0.75));
-        strokeWeight(0.6 + smoothTreble * timeCeiling);
-        let waveSteps = floor(6 + complexity * timeCeiling * 35);
+    // rotating techno hex around densest agent
+    if (swarmAgents.length > 6 && (paused || complexity > 0.22)) {
+        let sample = swarmAgents[floor((t * 7) % swarmAgents.length)];
+        let s = 12 + complexity * 36 + beat * 20;
+        let rot = t * (paused ? 0.6 : 1.4 + smoothTreble) + sample.phase;
+        stroke(255, (paused ? 100 : 55 + beat * 120) * strobe);
+        strokeWeight(1 + beat * 0.7);
         beginShape();
-        for (let i = 0; i <= waveSteps; i++) {
-            let px = lerp(x + w * 0.03, x + w * 0.97, i / waveSteps);
-            let wave = sin(t * 1.8 + i * 0.28) * (6 + smoothMid * 35 * timeCeiling + complexity * 20);
-            vertex(px, y + h * (0.12 + complexity * 0.08) + wave);
+        for (let i = 0; i <= 6; i++) {
+            let a = rot + (TWO_PI / 6) * i;
+            vertex(sample.x + cos(a) * s, sample.y + sin(a) * s);
         }
         endShape();
-    }
-
-    if (layer(0.52)) {
-        stroke(255, 210, 220, max(50, 20 + smoothBass * 100 * timeCeiling));
-        strokeWeight(0.6 + smoothBass * 1.5 * timeCeiling);
-        let lineCount = floor(1 + complexity * timeCeiling * 5);
-        for (let i = 0; i < lineCount; i++) {
-            let lx = lerp(x, x + w, (i + 1) / (lineCount + 1));
-            line(lx, y + h * 0.06, lx + sin(t * 1.2 + i) * (15 + smoothMid * 40 * timeCeiling), y + h * 0.5);
-        }
-    }
-
-    if (layer(0.68)) {
-        stroke(255, 255, 255, alpha * 0.45);
-        rect(x + 20, y + 20, w - 40, h - 90, 2);
-    }
-}
-
-function drawSpiral(px, py, radius, turns, alpha, spin, rotation, complexity) {
-    stroke(255, 255, 255, max(150, 100 + alpha * 155));
-    strokeWeight(max(1, 0.8 + alpha * 1.5));
-    beginShape();
-    noFill();
-    let steps = floor(16 + complexity * 48);
-    for (let i = 0; i <= steps; i++) {
-        let p = i / steps;
-        let angle = rotation + p * turns * TWO_PI * spin;
-        let r = radius * p;
-        vertex(px + cos(angle) * r, py + sin(angle) * r);
-    }
-    endShape();
-}
-
-function drawRadiatingBurst(px, py, radius, count, alpha, spin, rotation, complexity) {
-    stroke(200, 230, 255, max(120, 90 + alpha * 165));
-    strokeWeight(0.8 + alpha * 1.2);
-    for (let i = 0; i < count; i++) {
-        let angle = rotation + (TWO_PI / count) * i + spin;
-        line(px, py, px + cos(angle) * radius, py + sin(angle) * radius);
-    }
-}
-
-function drawDisruptiveArc(px, py, radius, alpha, spin, rotation, complexity) {
-    stroke(255, 230, 210, max(120, 80 + alpha * 175));
-    strokeWeight(1 + alpha * 1.5);
-    noFill();
-    arc(px, py, radius * 2, radius * 1.1, rotation + spin, rotation + PI + spin * 0.4);
-
-    if (complexity > 0.5) {
-        stroke(180, 210, 255, max(100, 60 + alpha * 120));
-        strokeWeight(0.8);
+        // inner diamond
+        stroke(255, (paused ? 90 : 45 + smoothPeak * 120) * strobe);
         beginShape();
-        let nodes = floor(8 + complexity * 14);
-        for (let i = 0; i <= nodes; i++) {
-            let a = rotation + (TWO_PI / nodes) * i;
-            let r = radius * (0.55 + sin(a * 2 + rotation) * 0.25);
-            vertex(px + cos(a) * r, py + sin(a) * r);
-        }
-        endShape();
-    }
-}
-
-function drawSquiggle(px, py, size, alpha, t, complexity) {
-    stroke(220, 240, 255, max(120, 90 + alpha * 165));
-    strokeWeight(1 + alpha * 1.1);
-    noFill();
-    beginShape();
-    let points = floor(12 + complexity * 20);
-    for (let i = 0; i <= points; i++) {
-        let p = i / points;
-        vertex(
-            px + (p - 0.5) * size * 2,
-            py + sin(p * PI * (2 + complexity * 3) + t * 2) * size * (0.3 + smoothMid * 0.5)
-        );
-    }
-    endShape();
-}
-
-function drawGeometricPattern(px, py, size, alpha, rotation, complexity) {
-    let sides = floor(3 + complexity * 4);
-    stroke(255, 250, 230, max(120, 85 + alpha * 170));
-    strokeWeight(1 + alpha * 1.1);
-    noFill();
-
-    beginShape();
-    for (let i = 0; i <= sides; i++) {
-        let a = rotation + (TWO_PI / sides) * i;
-        vertex(px + cos(a) * size, py + sin(a) * size);
-    }
-    endShape();
-
-    if (complexity > 0.35) {
-        stroke(180, 220, 255, max(100, 70 + alpha * 130));
-        beginShape();
-        for (let i = 0; i <= sides; i++) {
-            let a = rotation * 1.4 + (TWO_PI / sides) * i;
-            vertex(px + cos(a) * size * 0.55, py + sin(a) * size * 0.55);
+        for (let i = 0; i <= 4; i++) {
+            let a = -rot + HALF_PI * i;
+            vertex(sample.x + cos(a) * s * 0.45, sample.y + sin(a) * s * 0.45);
         }
         endShape();
     }
 
-    if (complexity > 0.6) {
-        stroke(255, 220, 240, max(90, 55 + alpha * 110));
-        line(px - size, py, px + size, py);
-        line(px, py - size, px, py + size);
-    }
-}
-
-function drawScrollingLyrics() {
-    push();
-    noStroke();
-    fill(0, 0, 0, 200);
-    rect(0, textHeight - 25, width, 50);
-
-    for (let i = 0; i < 10; i++) {
-        let alpha = map(i, 0, 10, 100, 0);
-        fill(0, 0, 0, alpha);
-        rect(0, textHeight - 25 - i, width, 1);
-        rect(0, textHeight + 24 + i, width, 1);
-    }
-
-    if (videoStarted && videoDuration) {
-        fill(255);
-        textSize(20);
-        textFont('Courier');
-        textAlign(LEFT, CENTER);
-        let textW = textWidth(poem);
-        let totalScrollWidth = width + textW;
-        let progress = video.time() / videoDuration;
-        scrollX = width - (totalScrollWidth * progress);
-        text(poem, scrollX, textHeight);
-
-        if (scrollX < width / 2) {
-            text(poem, scrollX + totalScrollWidth, textHeight);
-        }
-    }
-    pop();
+    // corner brackets
+    let br = 18 + beat * 10;
+    let ba = (paused ? 80 : 40 + energy * 90) * strobe;
+    stroke(255, ba);
+    strokeWeight(1.1);
+    line(x + 16, y + 16, x + 16 + br, y + 16);
+    line(x + 16, y + 16, x + 16, y + 16 + br);
+    line(x + w - 16, y + 16, x + w - 16 - br, y + 16);
+    line(x + w - 16, y + 16, x + w - 16, y + 16 + br);
+    line(x + 16, y + h - 16, x + 16 + br, y + h - 16);
+    line(x + 16, y + h - 16, x + 16, y + h - 16 - br);
+    line(x + w - 16, y + h - 16, x + w - 16 - br, y + h - 16);
+    line(x + w - 16, y + h - 16, x + w - 16, y + h - 16 - br);
 }
 
 function applyGenerativeOverlay(x, y, w, h) {
@@ -1057,7 +1157,7 @@ async function downloadRecording() {
     let link = document.createElement('a');
     let url = URL.createObjectURL(blob);
     link.href = url;
-    link.download = 'barely-there-' + Date.now() + '.' + extension;
+    link.download = 'relentless-epistemic-acts-' + Date.now() + '.' + extension;
     link.click();
     URL.revokeObjectURL(url);
 }
@@ -1079,83 +1179,8 @@ async function convertRecordingToMp4(inputBlob) {
     return new Blob([data.buffer], { type: 'video/mp4' });
 }
 
-function drawInstructions() {
-    if (!showInstructions) return;
-    
-    push();
-    textAlign(LEFT, TOP);
-    textSize(9);
-    textFont('Courier');
-    fill(255, 255, 255, 90);
-    noStroke();
-    
-    let x = 12;
-    let y = 10;
-    let lineHeight = 11;
-    let lines = [
-        'space  play / pause',
-        'a  automate (overrides keys)',
-        'l  loop',
-        'g  generative',
-        's  solarize',
-        'z  zoom in',
-        'f  zoom out',
-        'v  vectors',
-        'r  record',
-        'd  download',
-        'h  hide'
-    ];
-    
-    for (let i = 0; i < lines.length; i++) {
-        text(lines[i], x, y);
-        y += lineHeight;
-    }
-    
-    pop();
-}
-
-function drawConvertingIndicator() {
-    push();
-    textAlign(RIGHT, TOP);
-    textSize(9);
-    textFont('Courier');
-    fill(255, 255, 255, 120);
-    noStroke();
-    text('saving mp4…', width - 12, 12);
-    pop();
-}
-
-function drawModeIndicator(label) {
-    push();
-    textAlign(RIGHT, TOP);
-    textSize(9);
-    textFont('Courier');
-    fill(255, 255, 255, 120);
-    noStroke();
-    if (playing) {
-        text(label, width - 12, 12);
-    } else {
-        text(label + ' · space', width - 12, 12);
-    }
-    pop();
-}
-
-function drawRecordingIndicator() {
-    push();
-    noStroke();
-    fill(220, 40, 40, 200);
-    ellipse(width - 16, 16, 8, 8);
-    textAlign(RIGHT, TOP);
-    textSize(9);
-    textFont('Courier');
-    fill(255, 255, 255, 120);
-    text('rec', width - 24, 12);
-    pop();
-}
-
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
-    textHeight = height * 0.93;
     updateVideoLayout();
 }
 

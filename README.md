@@ -1,26 +1,27 @@
-# Barely There / I Am Home in Latent Space
+# relentless epistemic acts
 
 ![Screenshot 1](all1.png)
 
-**Barely There / I Am Home in Latent Space** is an interactive visual piece—a song sung with ASMR. The lyrics move through latent space as an intimate field: soft, close, barely present, and finally *I am home in latent space*. Video, scrolling lyrics, and generative visuals respond to playback and sound.
+**relentless epistemic acts** is an interactive visual piece—video and sound-reactive generative layers. Black-and-white techno vectors swarm across the frame; a crosshair replaces the system cursor.
 
 ## Live App
 
-**[View Live →](https://marlonbarrios.github.io/barely_there/)**
+**[View Live →](https://marlonbarrios.github.io/relentless_epistemics_acts/)**
 
 ## Repository
 
-**[github.com/marlonbarrios/barely_there](https://github.com/marlonbarrios/barely_there)**
+**[github.com/marlonbarrios/relentless_epistemics_acts](https://github.com/marlonbarrios/relentless_epistemics_acts)**
 
 ```bash
-git clone https://github.com/marlonbarrios/barely_there.git
+git clone https://github.com/marlonbarrios/relentless_epistemics_acts.git
 ```
 
 ![Screenshot 2](all2.png)
 
 ## Description
 
-The video loads **paused** on the first frame. Press **Space** to play or pause. Lyrics scroll in sync with the video. On-screen hints (top-left) list the controls; press **H** to hide them. Active modes appear top-right (`gen`, `vec`, `sol`, `auto`).
+
+The video loads **paused** on the first frame. Press **Space** to play or pause. On-screen hints appear top-left; press **H** to hide them. There is no lyrics ticker.
 
 You can perform the piece manually—toggling effects and zoom—or press **A** to let the app cycle through visual combinations on its own.
 
@@ -33,13 +34,13 @@ You can perform the piece manually—toggling effects and zoom—or press **A** 
 | **A**     | Toggle **automate** — random visual scenes driven by sound (overrides G, V, S, Z, F while active) |
 | **G**     | Toggle **generative** video effects (RGB split, bloom, invert, drift, etc.)                       |
 | **S**     | Toggle **solarize** — strong white solarization overlay                                           |
-| **V**     | Toggle **vectors** — sound-reactive lines, spirals, and geometry                                  |
+| **V**     | Toggle **vectors** — black-and-white techno swarm (grid, circuit links, waveforms, kick strobes)  |
 | **Z**     | Zoom in (hold for slow drift)                                                                     |
 | **F**     | Zoom out (hold for slow drift)                                                                    |
 | **L**     | Toggle loop                                                                                       |
 | **R**     | Start / stop canvas recording                                                                     |
 | **D**     | Download recording as MP4 (WebM converted in-browser when needed)                                 |
-| **H**     | Hide / show on-screen hints                                                                       |
+| **H**     | Hide / show on-screen instructions                                                                |
 
 
 ## Manual Mode
@@ -48,7 +49,7 @@ When **automate** is off, each key controls one layer independently. Effects can
 
 - **Generative (G)** — Color overlays on the video that pulse with bass, mids, and treble. Cycles through five variants on audio peaks and over time. Only renders while playing.
 - **Solarize (S)** — A dedicated high-contrast white solarize pass, independent of generative mode. Works while paused or playing; intensity follows peaks when playing.
-- **Vectors (V)** — White vector graphics across the full window. Complexity grows with song progress and sound amplitude. Works while paused (gentle idle animation) or playing (audio-reactive bursts).
+- **Vectors (V)** — A flocking swarm drawn as black-and-white techno graphics: dashed grid, scan beam, manhattan circuit links, square/triangle/cross nodes, saw/square waveform rails, radar rings, and kick-synced strobes. Density and motion follow song progress and audio. Works while paused (idle murmuration) or playing (audio-reactive).
 - **Zoom (Z / F)** — Scales the video within the window (1× to 3.5×), centered and clipped to the frame. Smooth, slow movement when holding the keys.
 
 While playing, active manual effects subtly respond to the music (brightness, density, intensity)—but only **you** decide which layers are on.
@@ -64,19 +65,23 @@ Press **A** while playing to hand control to the system. It picks random combina
 
 Press **A** again to exit automate. Your previous manual settings (which effects were on and your zoom level) are restored.
 
+## Cursor
+
+The system cursor is hidden. A white techno **crosshair** follows the mouse, with faint full-frame guides and corner brackets.
+
 ## Recording
 
 1. Press **R** to start recording the canvas (and video audio when available).
 2. Press **R** again to stop.
-3. Press **D** to download. Chrome may save WebM first and convert to MP4 via ffmpeg.wasm.
+3. Press **D** to download as `relentless-epistemic-acts-…`. Chrome may save WebM first and convert to MP4 via ffmpeg.wasm.
 
 ## Technical Details
 
 - **Stack:** p5.js, p5.sound, Web Audio API (`AnalyserNode` on the video element)
 - **Video:** Loads paused at frame 0; scaled to window height, centered, aspect ratio preserved
-- **Lyrics:** Scrolling ticker synced to `video.time() / duration`
+- **UI:** Top-left control hints (toggle with H); custom crosshair cursor; no lyrics ticker
 - **Generative:** 2D blend-mode overlays (no WebGL shader); five cycling variants
-- **Vectors:** Time ceiling × sound amplitude for complexity; burst system for spirals, arcs, squiggles, geometry
+- **Vectors:** Swarm agents with alignment / cohesion / separation on a noise flow field (8-way quantized); black-and-white techno draw pass (grid, links, nodes, ornaments)
 - **Solarize:** Multi-pass grayscale contrast / invert / screen stack
 - **Zoom:** `videoZoom` lerps toward target; slower easing in automate mode
 - **Automate:** Scene picker with weighted random combos; snapshot restores manual state on exit
@@ -85,8 +90,8 @@ Press **A** again to exit automate. Your previous manual settings (which effects
 
 1. Clone this repository:
   ```bash
-   git clone https://github.com/marlonbarrios/barely_there.git
-   cd barely_there
+   git clone https://github.com/marlonbarrios/relentless_epistemics_acts.git
+   cd relentless_epistemics_acts
   ```
 2. Serve the folder with a local web server (required for video and audio analysis — do not open as `file://`):
   ```bash
